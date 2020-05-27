@@ -1,5 +1,6 @@
-from keras.models import Model, Sequential
+from keras.models import Model, Sequential, model_from_json
 from keras.layers import Input, Convolution2D, ZeroPadding2D, MaxPooling2D, Flatten, Dense, Dropout, Activation
+import tensorflow
 
 
 def loadVggFaceModel():
@@ -85,3 +86,10 @@ def genderModel():
     return gender_model
 
 
+def emotion_model():
+    model = model_from_json(open("facial_expression_model_structure.json", "r").read())
+    model.load_weights("facial_expression_model_weights.h5")
+
+    labels = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')
+
+    return model, labels
