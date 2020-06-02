@@ -1,33 +1,32 @@
 import cv2
 import imutils
-import numpy as np
 import pafy
 import models
-import keras
-import face_classifier_model
 import os
-import json
 import numpy as np
-import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.preprocessing.image import load_img,img_to_array
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.applications.imagenet_utils import preprocess_input
 import tensorflow.keras.backend as K
-import pathlib
 import shutil
 
-#@TODO #fix paths
+# @TODO #fix paths
+
+# path to save our images after finishing analysis of the video
+saved_images_path = r".\saved_images\\"
+
 
 # url of the video to predict Age and gender
-url = 'https://www.youtube.com/watch?v=Psu9eE8ualg'
+url = 'https://www.youtube.com/watch?v=r-GFmH0EK9Y'
 vPafy = pafy.new(url)
 play = vPafy.getbest(preftype="mp4")
 cap = cv2.VideoCapture(play.url)
 
 
-age_model = models.ageModel()
-gender_model = models.genderModel()
-emotion_model, emotion_labels = models.emotion_model()
+# here we load our models to make out predictions
+age_model = models.get_age_model()
+gender_model = models.get_gender_model()
+emotion_model, emotion_labels = models.get_emotion_model()
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
 # age model has 101 outputs and its outputs will be multiplied by its index label. sum will be apparent age
@@ -35,7 +34,12 @@ age_output_indexes = np.array([i for i in range(0, 101)])
 
 
 def video_detector():
+    """This function gets frames from a given video, crops faces and makes predictions out of them. After making
+    predictions, it saves the frames to the hard drive with the help of "savePicture()" function and and shows them
+    to the user with prediction labels. Cropped faces will be saved into the ./saved_images folder."""
+
     frame = 0
+    frame_width = 960
     while True:
         frame += 1
         for i in range(30):
@@ -45,7 +49,7 @@ def video_detector():
         if ret is False:
             break
 
-        image = imutils.resize(image, width=560)
+        image = imutils.resize(image, frame_width)
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
@@ -53,7 +57,7 @@ def video_detector():
         if len(faces) > 0:
             print("Found {} faces".format(str(len(faces))))
             for (x, y, w, h) in faces:
-                if w > 50:
+                if w > frame_width / 15:
                     # age gender data set has 40% margin around the face. expand detected face.
                     margin = 30
                     margin_x = int((w * margin) / 100)
@@ -62,13 +66,13 @@ def video_detector():
                     detected_10margin_face = image[int(y):int(y + h), int(x):int(x + w)]
 
                     try:
-                        detected_40margin_face = image[int(y - margin_y):int(y + h + margin_y), int(x - margin_x):int(x + w +
-                                                                                                             margin_x)]
+                        detected_40margin_face = \
+                            image[int(y - margin_y):int(y + h + margin_y), int(x - margin_x): int(x + w + margin_x)]
+
                         if detected_40margin_face.size == 0:
                             raise Exception()
                     except:
                         detected_40margin_face = detected_10margin_face
-
 
                     try:
 
@@ -105,7 +109,8 @@ def video_detector():
                         # Create an overlay text and put it into frame
                         cv2.rectangle(image, (x, y), (x + w, y + h), (255, 255, 0), 2)
                         overlay_text = "%s %s\n%s" % (gender, apparent_age, emotion_prediction)
-                        cv2.putText(image, overlay_text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                        cv2.putText(image, overlay_text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2,
+                                    cv2.LINE_AA)
                     except Exception as e:
                         print("exception ", e)
 
@@ -116,26 +121,23 @@ def video_detector():
 
 
 def classify_and_folder_faces():
-    path = r".\saved_images\\"
+    """After finishing real time age, gender and emotion analysis of a given video, this function classifies saved
+    face images with our hand trained face classifier model. In short, it saves all faces belonging to same person
+    into same folder. For example, all faces belonging to Pam character, will be found in the ./saved_images/Pam
+    folder. """
 
-    #@TODO fix imports
-    vgg_face = face_classifier_model.get_embeddings()
+    vgg_face = models.get_vgg_face_model_embedding_extractor()
 
-    # @TODO fix imports
-    person_labels = {}
-    with open("persons.json") as file:
-        person_labels = json.loads(file.read())
+    person_labels, classifier_model = models.get_face_softmax_regressor_classifier_model_and_labels()
 
-    # @TODO fix imports
-    classifier_model = tf.keras.models.load_model('face_classifier_model.h5')
-
-    person_pics = os.listdir(path)
+    person_pics = os.listdir(saved_images_path)
 
     for i, image_name in enumerate(person_pics):
-        image = load_img(path + image_name, target_size=(224, 224))
+        image = load_img(saved_images_path + image_name, target_size=(224, 224))
         image = img_to_array(image)
         image = np.expand_dims(image, axis=0)
         image = preprocess_input(image)
+        print("====================== ", type(image), "===========================")
         img_encode = vgg_face(image)
 
         embed = K.eval(img_encode)
@@ -146,14 +148,32 @@ def classify_and_folder_faces():
         else:
             continue
 
-        if not os.path.isdir(path + name):
-            os.mkdir(path + name)
+        if not os.path.isdir(saved_images_path + name):
+            os.mkdir(saved_images_path + name)
 
-        shutil.move(path + image_name, path + name + "\\" + image_name)
+        shutil.move(saved_images_path + image_name, saved_images_path + name + "\\" + image_name)
 
 
-def analyze_classified_folders(folder_path):
-    pass
+def analyze_classified_folders():
+    person_dict = {}
+
+    if not os.path.exists(saved_images_path):
+        os.mkdir(saved_images_path)
+
+    person_folders = os.listdir(saved_images_path)
+
+    total_num_of_images = 0
+    for i, folder_name in enumerate(person_folders):
+        person_dict[folder_name] = {key: [] for key in ["age", "gender", "emotion"]}
+        image_names = os.listdir(saved_images_path + folder_name)
+        for k, picture_name in enumerate(image_names):
+            num, gender, age, emotion = picture_name.split("_")
+            person_dict[folder_name]["gender"].append(gender)
+            person_dict[folder_name]["age"].append(int(age))
+            person_dict[folder_name]["emotion"].append(emotion[:-4])
+            total_num_of_images += 1
+
+    return total_num_of_images, person_dict
 
 
 def save_picture(picture, number, age, gender, emotion):
@@ -167,9 +187,59 @@ def save_picture(picture, number, age, gender, emotion):
                 picture)
 
 
+def create_report(num_of_pictures, person_dict):
+    person_info_strs = []
+    num_of_known_faces = 0
 
+    screen_share_str = "Some people stole the show! Here are the screen share percentage of characters!:\n"
+
+    for person in person_dict.keys():
+        num_of_entries = len(person_dict[person]["age"])
+
+        if person != "unknown" and person != "notface":
+            screen_share_str += "\t%s has the screen share of: %.2f\n" % (
+            person.upper(), num_of_entries / num_of_pictures * 100)
+        elif person == "unknown":
+            screen_share_str += "Unknown character/s have the screen share of: %.2f\n" % \
+                                (num_of_entries / num_of_pictures * 100)
+
+        if person != "unknown" and person != "notface":
+            avg_age = 0
+            for age in person_dict[person]["age"]:
+                avg_age += age
+            avg_age /= num_of_entries
+
+            gender_predictions = {"F": 0, "M": 0}
+            for gender in person_dict[person]["gender"]:
+                gender_predictions[gender] += 1
+
+            dominant_gender = "Female" if gender_predictions["F"] > gender_predictions["M"] \
+                else "Male"
+
+            emotion_rates = {key: 0 for key in ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']}
+            for emotion in person_dict[person]["emotion"]:
+                emotion_rates[emotion] += 1
+
+            tmp_str = "Character: %s: \nDominant gender prediction: %s.\nEstimated average age: %d\n" % \
+                      (person.upper(), dominant_gender, int(avg_age))
+
+            tmp_str += "Throughout the video, observed emotions are:\n "
+            for emotion in emotion_rates.keys():
+                tmp_str += "\t%s: %.2f\n" % (emotion.upper(), emotion_rates[emotion] / num_of_entries * 100)
+
+            person_info_strs.append(tmp_str)
+            num_of_known_faces += 1
+
+    final_str = "In total %s images found by the face detector algorithm. \n\n" \
+                "%s\n\n" \
+                "There were %s known faces recognized by our Softmax Regressor. \n%s\n\n" % \
+                (num_of_pictures, screen_share_str, num_of_known_faces, "\n\n".join(person_info_strs))
+
+    print(final_str)
 
 
 if __name__ == "__main__":
-    video_detector()
+    #video_detector()
     classify_and_folder_faces()
+    total_number_of_images, person_dictionary = analyze_classified_folders()
+    create_report(total_number_of_images, person_dictionary)
