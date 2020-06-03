@@ -34,7 +34,6 @@ def softmax_regressor(x_train, y_train):
 
 
 def prepare_train_data(vgg_face):
-
 	# Prepare Train Data
 	x_train = []
 	y_train = []

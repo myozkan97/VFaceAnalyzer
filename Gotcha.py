@@ -9,8 +9,10 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.applications.imagenet_utils import preprocess_input
 import tensorflow.keras.backend as K
 import shutil
+import utils
+import MainWindow
+import threading
 
-# @TODO #fix paths
 
 # path to save our images after finishing analysis of the video
 saved_images_path = r".\saved_images\\"
@@ -23,26 +25,31 @@ play = vPafy.getbest(preftype="mp4")
 cap = cv2.VideoCapture(play.url)
 
 
-# here we load our models to make out predictions
-age_model = models.get_age_model()
-gender_model = models.get_gender_model()
-emotion_model, emotion_labels = models.get_emotion_model()
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-
-# age model has 101 outputs and its outputs will be multiplied by its index label. sum will be apparent age
-age_output_indexes = np.array([i for i in range(0, 101)])
-
-
-def video_detector():
+def video_detector() -> None:
     """This function gets frames from a given video, crops faces and makes predictions out of them. After making
     predictions, it saves the frames to the hard drive with the help of "savePicture()" function and and shows them
     to the user with prediction labels. Cropped faces will be saved into the ./saved_images folder."""
 
+    # here we load our models to make out predictions
+    age_model = models.get_age_model()
+    gender_model = models.get_gender_model()
+    emotion_model, emotion_labels = models.get_emotion_model()
+    face_cascade = cv2.CascadeClassifier(
+        utils.get_or_download('haarcascade_frontalface_default.xml', 'https://drive.google'
+                                                                     '.com/uc?id=1vuWt_x_3'
+                                                                     'QQaMs8nxklmMf-8OtHMB'
+                                                                     'OM5V'))
+
+    # age model has 101 outputs and its outputs will be multiplied by its index label. sum will be apparent age
+    age_output_indexes = np.array([i for i in range(0, 101)])
+
+    utils.delete_contents_of_folder(saved_images_path)
+
     frame = 0
-    frame_width = 960
-    while True:
+    frame_width = 480
+    while not MainWindow.windowClosed:
         frame += 1
-        for i in range(30):
+        for i in range(100):
             cap.read()
         ret, image = cap.read()
 
@@ -57,7 +64,7 @@ def video_detector():
         if len(faces) > 0:
             print("Found {} faces".format(str(len(faces))))
             for (x, y, w, h) in faces:
-                if w > frame_width / 15:
+                if w > frame_width / 10:
                     # age gender data set has 40% margin around the face. expand detected face.
                     margin = 30
                     margin_x = int((w * margin) / 100)
@@ -108,23 +115,25 @@ def video_detector():
 
                         # Create an overlay text and put it into frame
                         cv2.rectangle(image, (x, y), (x + w, y + h), (255, 255, 0), 2)
-                        overlay_text = "%s %s\n%s" % (gender, apparent_age, emotion_prediction)
+                        overlay_text = "%s %s %s" % (gender, apparent_age, emotion_prediction)
                         cv2.putText(image, overlay_text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2,
                                     cv2.LINE_AA)
                     except Exception as e:
                         print("exception ", e)
 
-            cv2.imshow('frame', image)
+            MainWindow.show_image(image)
             # 0xFF is a hexadecimal constant which is 11111111 in binary.
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
 
-def classify_and_folder_faces():
+def classify_and_folder_faces() -> None:
     """After finishing real time age, gender and emotion analysis of a given video, this function classifies saved
     face images with our hand trained face classifier model. In short, it saves all faces belonging to same person
     into same folder. For example, all faces belonging to Pam character, will be found in the ./saved_images/Pam
     folder. """
+
+
 
     vgg_face = models.get_vgg_face_model_embedding_extractor()
 
@@ -137,16 +146,15 @@ def classify_and_folder_faces():
         image = img_to_array(image)
         image = np.expand_dims(image, axis=0)
         image = preprocess_input(image)
-        print("====================== ", type(image), "===========================")
         img_encode = vgg_face(image)
 
         embed = K.eval(img_encode)
         person = classifier_model.predict(embed)
         arg_max = np.argmax(person)
-        if arg_max > 0.5:
+        if arg_max > 0.8:
             name = person_labels[str(arg_max)]
         else:
-            continue
+            name = "unknown"
 
         if not os.path.isdir(saved_images_path + name):
             os.mkdir(saved_images_path + name)
@@ -154,7 +162,10 @@ def classify_and_folder_faces():
         shutil.move(saved_images_path + image_name, saved_images_path + name + "\\" + image_name)
 
 
-def analyze_classified_folders():
+def analyze_classified_folders() -> (int, dict):
+    """This function analyzes folder-classified pictures and created a dictionary which contains data about
+    characters: All recorded age, gender, emotion predictions; name of the character etc... """
+
     person_dict = {}
 
     if not os.path.exists(saved_images_path):
@@ -176,7 +187,8 @@ def analyze_classified_folders():
     return total_num_of_images, person_dict
 
 
-def save_picture(picture, number, age, gender, emotion):
+def save_picture(picture: np.array, number: int, age: str, gender: str, emotion: str) -> None:
+    """This function saves given image and names saved file with given attributes."""
     saved_pictures_path = r".\saved_images\\"
 
     if not os.path.isdir(saved_pictures_path):
@@ -187,7 +199,9 @@ def save_picture(picture, number, age, gender, emotion):
                 picture)
 
 
-def create_report(num_of_pictures, person_dict):
+def create_report(num_of_pictures: int, person_dict: dict) -> str:
+    """This fuction is used to generate report string from a given dictionary input."""
+
     person_info_strs = []
     num_of_known_faces = 0
 
@@ -197,8 +211,8 @@ def create_report(num_of_pictures, person_dict):
         num_of_entries = len(person_dict[person]["age"])
 
         if person != "unknown" and person != "notface":
-            screen_share_str += "\t%s has the screen share of: %.2f\n" % (
-            person.upper(), num_of_entries / num_of_pictures * 100)
+            screen_share_str += "\t%s has the screen share of: %.2f\n" % \
+                                    (person.upper(), num_of_entries / num_of_pictures * 100)
         elif person == "unknown":
             screen_share_str += "Unknown character/s have the screen share of: %.2f\n" % \
                                 (num_of_entries / num_of_pictures * 100)
@@ -235,11 +249,22 @@ def create_report(num_of_pictures, person_dict):
                 "There were %s known faces recognized by our Softmax Regressor. \n%s\n\n" % \
                 (num_of_pictures, screen_share_str, num_of_known_faces, "\n\n".join(person_info_strs))
 
-    print(final_str)
+    return final_str
+
+
+def main():
+    MainWindow.print_line("Starting real-time video analyzer.")
+    video_detector()
+
+    MainWindow.print_line("Classifying saved images, please wait...")
+    classify_and_folder_faces()
+
+    MainWindow.print_line("Generating report, please wait...")
+    total_number_of_images, person_dictionary = analyze_classified_folders()
+
+    MainWindow.clean_textbox()
+    MainWindow.print_line(create_report(total_number_of_images, person_dictionary))
 
 
 if __name__ == "__main__":
-    #video_detector()
-    classify_and_folder_faces()
-    total_number_of_images, person_dictionary = analyze_classified_folders()
-    create_report(total_number_of_images, person_dictionary)
+    main()
