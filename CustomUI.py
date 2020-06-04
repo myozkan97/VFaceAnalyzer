@@ -6,24 +6,24 @@ import traceback, sys
 
 
 class WorkerSignals(QObject):
-    '''
+    """
     Defines the signals available from a running worker thread.
 
     Supported signals are:
 
     finished
         No data
-    
+
     error
         `tuple` (exctype, value, traceback.format_exc() )
-    
+
     result
         `object` data returned from processing, anything
 
     progress
-        `int` indicating % progress 
+        `int` indicating % progress
 
-    '''
+    """
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)
@@ -31,18 +31,18 @@ class WorkerSignals(QObject):
 
 
 class Worker(QRunnable):
-    '''
+    """
     Worker thread
 
     Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
 
-    :param callback: The function callback to run on this worker thread. Supplied args and 
+    :param callback: The function callback to run on this worker thread. Supplied args and
                      kwargs will be passed through to the runner.
     :type callback: function
     :param args: Arguments to pass to the callback function
     :param kwargs: Keywords to pass to the callback function
 
-    '''
+    """
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
 
@@ -57,9 +57,9 @@ class Worker(QRunnable):
 
     @pyqtSlot()
     def run(self):
-        '''
+        """
         Initialise the runner function with passed args, kwargs.
-        '''
+        """
         
         # Retrieve args/kwargs here; and fire processing using them
         try:
@@ -72,6 +72,7 @@ class Worker(QRunnable):
             self.signals.result.emit(result)  # Return the result of the processing
         finally:
             self.signals.finished.emit()  # Done
+
 
 class ImageLabel(QLabel):
     def __init__(self):
@@ -86,13 +87,13 @@ class ImageLabel(QLabel):
     def paintEvent(self, event):
         size = self.size()
         painter = QPainter(self)
-        point = QPoint(0,0)
+        point = QPoint(0, 0)
         if self.pixmap.isNull() is False:
-            scaledPix = self.pixmap.scaled(size, Qt.KeepAspectRatio, transformMode = Qt.SmoothTransformation)
+            scaled_pix = self.pixmap.scaled(size, Qt.KeepAspectRatio, transformMode = Qt.SmoothTransformation)
         else:
-            scaledPix = self.pixmap
+            scaled_pix = self.pixmap
         # start painting the label from left upper corner
-        point.setX((size.width() - scaledPix.width())/2)
-        point.setY((size.height() - scaledPix.height())/2)
-        painter.drawPixmap(point, scaledPix)
+        point.setX((size.width() - scaled_pix.width())/2)
+        point.setY((size.height() - scaled_pix.height())/2)
+        painter.drawPixmap(point, scaled_pix)
         painter.end()

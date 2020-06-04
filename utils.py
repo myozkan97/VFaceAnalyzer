@@ -3,7 +3,6 @@ import shutil
 import gdown
 
 
-
 def get_or_download(file_name: str, link: str) -> str:
     """If file does not exists, it downloads it. If it exists or have been downloaded, it returns the file path."""
     if not os.path.isfile(".\\" + file_name):

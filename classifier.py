@@ -7,11 +7,9 @@ import tensorflow.keras.backend as K
 import shutil
 import models
 
-
-
-
 # path to save our images after finishing analysis of the video
 saved_images_path = r".\saved_images\\"
+
 
 def classify_and_folder_faces() -> None:
     """After finishing real time age, gender and emotion analysis of a given video, this function classifies saved
@@ -134,5 +132,3 @@ def create_report(num_of_pictures: int, person_dict: dict) -> str:
                 (num_of_pictures, screen_share_str, num_of_known_faces, "\n\n".join(person_info_strs))
 
     return final_str
-
-

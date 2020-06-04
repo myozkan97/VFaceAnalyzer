@@ -4,7 +4,7 @@ from PyQt5.QtCore import QThreadPool
 from CustomUI import ImageLabel, Worker
 import numpy as np
 from tensorflow import keras
-import Classifier
+import classifier
 import cv2
 import utils
 import models
@@ -158,7 +158,7 @@ class MainWindow(QMainWindow):
                                 gender = "M"
 
                             # save picture to hard drive
-                            Classifier.save_picture(detected_10margin_face, frame, apparent_age, gender,
+                            classifier.save_picture(detected_10margin_face, frame, apparent_age, gender,
                                                     emotion_prediction)
 
                             # Create an overlay text and put it into frame
@@ -175,12 +175,12 @@ class MainWindow(QMainWindow):
                     break
 
         self.print_line("Classifying saved images, please wait...")
-        Classifier.classify_and_folder_faces()
+        classifier.classify_and_folder_faces()
 
         self.print_line("Generating report, please wait...")
-        total_number_of_images, person_dictionary = Classifier.analyze_classified_folders()
+        total_number_of_images, person_dictionary = classifier.analyze_classified_folders()
 
-        self.print_line(Classifier.create_report(total_number_of_images, person_dictionary))
+        self.print_line(classifier.create_report(total_number_of_images, person_dictionary))
 
     def show_image(self, img):
         qformat = QImage.Format_Indexed8

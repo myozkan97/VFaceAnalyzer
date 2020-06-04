@@ -1,16 +1,13 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.layers import ZeroPadding2D, Convolution2D, MaxPooling2D
-from tensorflow.keras.layers import Dense, Dropout, Softmax, Flatten, Activation, BatchNormalization
-from tensorflow.keras.preprocessing.image import load_img,img_to_array
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, Activation, BatchNormalization
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.applications.imagenet_utils import preprocess_input
 import tensorflow.keras.backend as K
 import json
 import os
 import models
-
 
 
 def softmax_regressor(x_train, y_train):
@@ -59,8 +56,6 @@ def prepare_train_data(vgg_face):
 
 test_images_path = r'C:\Users\myozkan\PycharmProjects\aiproj2\test_images\\'
 
-
-
 person_rep, x_train, y_train = prepare_train_data(models.get_vgg_face_model_embedding_extractor())
 
 
@@ -77,4 +72,4 @@ with open('person_rep2', 'w') as fp:
 # tf.keras.models.save_model(classifier_model, path + '/face_classifier_model.h5')
 
 # Load saved model
-#classifier_model = tf.keras.models.load_model(r'./face_classifier_model.h5')
+# classifier_model = tf.keras.models.load_model(r'./face_classifier_model.h5')

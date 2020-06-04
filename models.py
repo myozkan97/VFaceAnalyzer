@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential, Model, model_from_json
 from tensorflow.keras.layers import ZeroPadding2D, Convolution2D, MaxPooling2D
-from tensorflow.keras.layers import Dense, Dropout, Softmax, Flatten, Activation, BatchNormalization
+from tensorflow.keras.layers import Dropout, Flatten, Activation
 import json
 import utils
 
@@ -144,4 +144,3 @@ def get_face_softmax_regressor_classifier_model_and_labels() -> (dict, keras.mod
     classifier_model = tf.keras.models.load_model(classifier_file_path)
 
     return person_labels, classifier_model
-
