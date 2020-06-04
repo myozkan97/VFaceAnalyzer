@@ -136,7 +136,7 @@ def get_face_softmax_regressor_classifier_model_and_labels() -> (dict, keras.mod
     labels_file_path = utils.get_or_download('persons.json', 'https://drive.google.com/uc?id=1EDegJgHR76PCEyEFMn'
                                                              '-gbYJrO0v6Od6A')
     classifier_file_path = utils.get_or_download('face_classifier_model.h5', 'https://drive.google.com/uc?id=1PGO666v'
-                                                                             '-Yk3H46ihf57ie_dObLiTdyHS/view?usp=sharing')
+                                                                             '-Yk3H46ihf57ie_dObLiTdyHS')
 
     with open(labels_file_path) as fp:
         person_labels = json.load(fp)
