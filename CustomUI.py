@@ -2,7 +2,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
-import time
 import traceback, sys
 
 
@@ -54,7 +53,7 @@ class Worker(QRunnable):
         self.signals = WorkerSignals()    
 
         # Add the callback to our kwargs
-        self.kwargs['progress_callback'] = self.signals.progress        
+        self.kwargs['progress_callback'] = self.signals.progress
 
     @pyqtSlot()
     def run(self):
