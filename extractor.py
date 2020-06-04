@@ -8,11 +8,7 @@ play = vPafy.getbest(preftype="mp4")
 cap = cv2.VideoCapture("office_s07e24.mp4")
 
 
-
-
-
 def video_detector():
-    font = cv2.FONT_HERSHEY_SIMPLEX
     k = 0
     while True:
         k += 1
@@ -30,12 +26,6 @@ def video_detector():
             print("Found {} faces".format(str(len(faces))))
         for (x, y, w, h) in faces:
             if w > 60:
-
-                # age gender data set has 40% margin around the face. expand detected face.
-                margin = 30
-                margin_x = int((w * margin) / 100)
-                margin_y = int((h * margin) / 100)
-
                 detected_face = image[int(y):int(y + h), int(x):int(x + w)].copy()
 
                 try:
@@ -43,8 +33,6 @@ def video_detector():
                     print(cv2.imwrite(r'C:\Users\myozkan\PycharmProjects\aiproj2\test_images'
                                       r'\\' + str(k) + ".jpg",
                                       detected_face))
-
-
 
                     # Create an overlay text and put it into frame
                     cv2.rectangle(image, (x, y), (x + w, y + h), (255, 255, 0), 2)

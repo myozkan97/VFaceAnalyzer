@@ -59,13 +59,17 @@ def prepare_train_data(vgg_face):
 
 test_images_path = r'C:\Users\myozkan\PycharmProjects\aiproj2\test_images\\'
 
-vgg_face = models.get_vgg_face_model_embedding_extractor()
 
-x_train = np.load("train_data.npy")
-y_train = np.load("train_labels.npy")
 
-with open('persons.json') as fp:
-	person_labels = json.load(fp)
+person_rep, x_train, y_train = prepare_train_data(models.get_vgg_face_model_embedding_extractor())
+
+
+np.save("tain_data2.npy", x_train)
+np.save("train_labels2.npy", y_train)
+
+with open('person_rep2', 'w') as fp:
+	json.dump(person_rep, fp)
+
 
 # classifier_model = softmax_regressor(x_train, y_train)
 #
@@ -73,4 +77,4 @@ with open('persons.json') as fp:
 # tf.keras.models.save_model(classifier_model, path + '/face_classifier_model.h5')
 
 # Load saved model
-classifier_model = tf.keras.models.load_model(r'./face_classifier_model.h5')
+#classifier_model = tf.keras.models.load_model(r'./face_classifier_model.h5')
