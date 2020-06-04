@@ -14,8 +14,6 @@ import pafy
 # path to save our images after finishing analysis of the video
 saved_images_path = r".\saved_images\\"
 
-# url of the video to predict Age and gender
-url = 'https://www.youtube.com/watch?v=r-GFmH0EK9Y'
 
 
 class MainWindow(QMainWindow):
@@ -26,11 +24,11 @@ class MainWindow(QMainWindow):
         self.windowClosed = False
 
         # Ust Bar
-        video_url = QLineEdit()
+        self.video_url = QLineEdit()
         self.startButton = QPushButton("Analyze")
         header_box = QHBoxLayout()
         header_box.addWidget(QLabel("Youtube URL: "))
-        header_box.addWidget(video_url)
+        header_box.addWidget(self.video_url)
         header_box.addWidget(self.startButton)
 
         # Log ve Resim
@@ -72,7 +70,7 @@ class MainWindow(QMainWindow):
         self.startButton.setDisabled(True)
         self.print_line("Starting real-time video analyzer...")
 
-        v_pafy = pafy.new(url)
+        v_pafy = pafy.new(self.video_url.text())
         play = v_pafy.getbest(preftype="mp4")
         cap = cv2.VideoCapture(play.url)
 
@@ -96,7 +94,7 @@ class MainWindow(QMainWindow):
         self.print_line("Started real-time video analyzer...")
         while not self.windowClosed:
             frame += 1
-            for i in range(100):
+            for i in range(35):
                 cap.read()
             ret, image = cap.read()
 

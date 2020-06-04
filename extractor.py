@@ -13,6 +13,7 @@ def video_detector():
     while True:
         k += 1
         for i in range(20):
+
             cap.read()
         ret, image = cap.read()
         image = imutils.resize(image, width=480)
