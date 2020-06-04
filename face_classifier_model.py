@@ -56,20 +56,29 @@ def prepare_train_data(vgg_face):
 
 test_images_path = r'C:\Users\myozkan\PycharmProjects\aiproj2\test_images\\'
 
-person_rep, x_train, y_train = prepare_train_data(models.get_vgg_face_model_embedding_extractor())
+# 
+# person_rep, x_train, y_train = prepare_train_data(models.get_vgg_face_model_embedding_extractor())
+# 
+# 
+# np.save("tain_data2.npy", x_train)
+# np.save("train_labels2.npy", y_train)
+# 
+# with open('person_rep2', 'w') as fp:
+# 	json.dump(person_rep, fp)
+
+x_train = np.load("tain_data2.npy")
+y_train = np.load("train_labels2.npy")
+
+with open("person_rep2") as fp:
+	person_rep = json.load(fp)
 
 
-np.save("tain_data2.npy", x_train)
-np.save("train_labels2.npy", y_train)
 
-with open('person_rep2', 'w') as fp:
-	json.dump(person_rep, fp)
+classifier_model = softmax_regressor(x_train, y_train)
 
-
-# classifier_model = softmax_regressor(x_train, y_train)
 #
 # # Save model for later use
-# tf.keras.models.save_model(classifier_model, path + '/face_classifier_model.h5')
+tf.keras.models.save_model(classifier_model, './face_classifier_model2.h5')
 
 # Load saved model
 # classifier_model = tf.keras.models.load_model(r'./face_classifier_model.h5')

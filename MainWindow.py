@@ -172,6 +172,8 @@ class MainWindow(QMainWindow):
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
+        standby_image = cv2.imread("standby.jpg")
+        self.show_image(standby_image)
         self.print_line("Classifying saved images, please wait...")
         classifier.classify_and_folder_faces()
 
