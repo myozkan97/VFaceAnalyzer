@@ -68,7 +68,9 @@ class MainWindow(QMainWindow):
             them to the user with prediction labels. Cropped faces will be saved into the ./saved_images folder."""
 
         self.startButton.setDisabled(True)
-        self.print_line("Starting real-time video analyzer...")
+        self.print_line("Making preparations, downloading missing model files, please wait...\n\n")
+        loading_image = cv2.imread("loading.png")
+        self.show_image(loading_image)
 
         v_pafy = pafy.new(self.video_url.text())
         play = v_pafy.getbest(preftype="mp4")
@@ -94,7 +96,7 @@ class MainWindow(QMainWindow):
         self.print_line("Started real-time video analyzer...")
         while not self.windowClosed:
             frame += 1
-            for i in range(35):
+            for i in range(40):
                 cap.read()
             ret, image = cap.read()
 
