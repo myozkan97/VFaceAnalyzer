@@ -1,7 +1,7 @@
 #VFaceAnalyzer
 
 ## What is it? 
-This project is created as a final project for Aybars Uğur's 2020 Spring Artificial Intelligence class at Ege University Computer Engineering Department.
+This project is created by [Ramazan Yiğit](https://github.com/ramazanyigit) and [Muhammed Yusuf Özkan](https://github.com/myozkan97) as a final project for Aybars Uğur's 2020 Spring Artificial Intelligence class at Ege University Computer Engineering Department.
 
 ## What is does? 
 Basically, it takes a "The Office" clip from Youtube and creates a detailed report about 
@@ -11,7 +11,7 @@ Basically, it takes a "The Office" clip from Youtube and creates a detailed repo
 * predominant gender prediction of each character etc.
 
 ## Where it can be usefeul?
-Well, this is a silly application for no particular real life usage. Sole purpose of this application was to show off our DL skills to get a high grade. Which we did. 
+Well, this is a silly application for no particular real life use. Sole purpose of this application was to show off our DL skills to get a high grade. Which we did. 
 
 ## How it works? 
 In exact order:
